@@ -4,30 +4,20 @@
 <meta charset="UTF-8">
 <title>Operator Panel</title>
 <style>
-  body { font-family: Arial; background: #222; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
-  input { font-size: 2em; margin: 10px; padding: 5px; width: 300px; }
-  button { font-size: 2em; padding: 10px 20px; margin-top: 20px; cursor: pointer; }
+body { background:#222; color:white; font-family:Arial,sans-serif; display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; margin:0; }
+input { font-size:2em; margin:10px; padding:5px; width:300px; }
+button { font-size:2em; padding:10px 20px; margin-top:20px; cursor:pointer; }
 </style>
 </head>
 <body>
-  <input type="text" id="name1" placeholder="Player 1 name">
-  <input type="number" id="score1" placeholder="Player 1 score">
-  <input type="text" id="name2" placeholder="Player 2 name">
-  <input type="number" id="score2" placeholder="Player 2 score">
-  <button id="updateBtn">Update</button>
+<input type="text" id="name1" placeholder="Player 1 name">
+<input type="number" id="score1" placeholder="Player 1 score">
+<input type="text" id="name2" placeholder="Player 2 name">
+<input type="number" id="score2" placeholder="Player 2 score">
+<button id="updateBtn">Update</button>
 
 <script>
 const ws = new WebSocket(`ws://${location.host}`);
-
-ws.onopen = () => console.log('Connected to server');
-ws.onmessage = e => {
-  const data = JSON.parse(e.data);
-  document.getElementById('name1').value = data.name1;
-  document.getElementById('score1').value = data.score1;
-  document.getElementById('name2').value = data.name2;
-  document.getElementById('score2').value = data.score2;
-};
-
 document.getElementById('updateBtn').addEventListener('click', () => {
   const data = {
     name1: document.getElementById('name1').value,
