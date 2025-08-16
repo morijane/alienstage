@@ -60,7 +60,37 @@ socket.on('scoreUpdate', (data) => {
   document.getElementById('name2').textContent = data.name2;
   document.getElementById('score2').textContent = data.score2;
 });
-</script>
+  const channel = new BroadcastChannel('score_channel');
 
+  let prevScores = { score1: 0, score2: 0 };
+
+  channel.onmessage = (event) => {
+    const data = event.data;
+
+    // Обновляем имена
+    document.getElementById('player1').querySelector('.name').textContent = data.name1;
+    document.getElementById('player2').querySelector('.name').textContent = data.name2;
+
+    // Обновляем очки с анимацией
+    updateScore('score1', data.score1);
+    updateScore('score2', data.score2);
+  };
+
+  function updateScore(id, newScore) {
+    const scoreEl = document.getElementById(id);
+    const prevScore = prevScores[id];
+
+    if (newScore !== prevScore) {
+      scoreEl.textContent = newScore;
+      scoreEl.classList.add('highlight');
+
+      setTimeout(() => {
+        scoreEl.classList.remove('highlight');
+      }, 500);
+
+      prevScores[id] = newScore;
+    }
+  }
+</script>
 </body>
 </html>
