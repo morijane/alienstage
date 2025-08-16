@@ -1,39 +1,36 @@
 const express = require('express');
-const WebSocket = require('ws');
 const path = require('path');
+const WebSocket = require('ws');
 
 const app = express();
-const port = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000;
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-const server = app.listen(port, () => {
-  console.log(`Server running on http://localhost:${port}`);
+const server = app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
 
 const wss = new WebSocket.Server({ server });
 
-let scoreData = {
-  name1: 'Player 1',
-  score1: 0,
-  name2: 'Player 2',
-  score2: 0
-};
+let currentData = { name1: '', score1: 0, name2: '', score2: 0 };
 
 wss.on('connection', ws => {
-  ws.send(JSON.stringify(scoreData));
+  // Отправляем текущее состояние новым клиентам
+  ws.send(JSON.stringify(currentData));
 
   ws.on('message', message => {
     try {
       const data = JSON.parse(message);
-      scoreData = { ...scoreData, ...data };
+      currentData = data;
+      // Рассылаем всем клиентам
       wss.clients.forEach(client => {
         if (client.readyState === WebSocket.OPEN) {
-          client.send(JSON.stringify(scoreData));
+          client.send(JSON.stringify(currentData));
         }
       });
     } catch (e) {
-      console.error('Invalid message', e);
+      console.error('Invalid message:', e);
     }
   });
 });
