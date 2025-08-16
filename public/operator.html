@@ -1,13 +1,12 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
 <title>Operator Panel</title>
 <style>
-  body { background: #222; color: white; font-family: Arial; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin:0;}
-  input { font-size: 2em; margin: 10px; padding: 5px; width: 300px;}
-  button { font-size: 2em; padding: 10px 20px; margin-top: 20px; cursor: pointer;}
+  body { font-family: Arial; background: #222; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+  input { font-size: 2em; margin: 10px; padding: 5px; width: 300px; }
+  button { font-size: 2em; padding: 10px 20px; margin-top: 20px; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -17,9 +16,18 @@
   <input type="number" id="score2" placeholder="Player 2 score">
   <button id="updateBtn">Update</button>
 
-<script src="/socket.io/socket.io.js"></script>
 <script>
-const socket = io();
+const ws = new WebSocket(`ws://${location.host}`);
+
+ws.onopen = () => console.log('Connected to server');
+ws.onmessage = e => {
+  const data = JSON.parse(e.data);
+  document.getElementById('name1').value = data.name1;
+  document.getElementById('score1').value = data.score1;
+  document.getElementById('name2').value = data.name2;
+  document.getElementById('score2').value = data.score2;
+};
+
 document.getElementById('updateBtn').addEventListener('click', () => {
   const data = {
     name1: document.getElementById('name1').value,
@@ -27,7 +35,7 @@ document.getElementById('updateBtn').addEventListener('click', () => {
     name2: document.getElementById('name2').value,
     score2: parseInt(document.getElementById('score2').value) || 0
   };
-  socket.emit('updateScore', data);
+  ws.send(JSON.stringify(data));
 });
 </script>
 </body>
