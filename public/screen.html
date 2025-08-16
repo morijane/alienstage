@@ -2,53 +2,21 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Futuristic Scoreboard</title>
+<title>Scoreboard</title>
 <style>
-  body {
-    background-color: #111111; /* тёмный фон */
-    font-family: 'Arial', sans-serif;
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    height: 100vh;
-    margin: 0;
-  }
-  .player {
-    background: rgba(17,17,17,0.7);
-    border: 3px solid #11cabc;
-    border-radius: 25px;
-    padding: 50px 30px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 200px; /* вертикальная прямоугольная форма */
-    height: 400px;
-    box-shadow: 0 0 30px #11cabc;
-    transition: transform 0.3s;
-  }
-  .player:hover {
-    transform: scale(1.05);
-  }
-  .name {
-    font-size: 2.5em;
-    color: #11cabc;
-    margin-bottom: 40px;
-    text-align: center;
-  }
-  .score {
-    font-size: 4em;
-    color: white;
-  }
+  body { background: #111; color: white; font-family: Arial; display: flex; justify-content: space-around; align-items: center; height: 100vh; margin:0;}
+  .player { text-align: center; font-size: 4em;}
+  .score { font-size: 5em; margin-top: 0.2em;}
 </style>
 </head>
 <body>
-  <div class="player" id="player1">
-    <div class="name">Player 1</div>
-    <div class="score" id="score1">0</div>
+  <div class="player">
+    <div id="name1">Player 1</div>
+    <div id="score1" class="score">0</div>
   </div>
-  <div class="player" id="player2">
-    <div class="name">Player 2</div>
-    <div class="score" id="score2">0</div>
+  <div class="player">
+    <div id="name2">Player 2</div>
+    <div id="score2" class="score">0</div>
   </div>
 
 <script src="/socket.io/socket.io.js"></script>
@@ -60,37 +28,6 @@ socket.on('scoreUpdate', (data) => {
   document.getElementById('name2').textContent = data.name2;
   document.getElementById('score2').textContent = data.score2;
 });
-  const channel = new BroadcastChannel('score_channel');
-
-  let prevScores = { score1: 0, score2: 0 };
-
-  channel.onmessage = (event) => {
-    const data = event.data;
-
-    // Обновляем имена
-    document.getElementById('player1').querySelector('.name').textContent = data.name1;
-    document.getElementById('player2').querySelector('.name').textContent = data.name2;
-
-    // Обновляем очки с анимацией
-    updateScore('score1', data.score1);
-    updateScore('score2', data.score2);
-  };
-
-  function updateScore(id, newScore) {
-    const scoreEl = document.getElementById(id);
-    const prevScore = prevScores[id];
-
-    if (newScore !== prevScore) {
-      scoreEl.textContent = newScore;
-      scoreEl.classList.add('highlight');
-
-      setTimeout(() => {
-        scoreEl.classList.remove('highlight');
-      }, 500);
-
-      prevScores[id] = newScore;
-    }
-  }
 </script>
 </body>
 </html>
