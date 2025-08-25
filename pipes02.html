@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Головоломка с трубами – Вариация</title>
+<style>
+body {
+  margin: 0; padding: 0;
+  background-color: #0a0a0a;
+  font-family: Arial, sans-serif;
+  color: cyan;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  transition: background-color 0.2s;
+}
+h1 { margin-top: 40px; font-size: 2em; text-align: center; }
+.puzzle-container {
+  margin-top: 50px;
+  display: grid;
+  grid-template-columns: repeat(4, 80px);
+  grid-gap: 10px;
+}
+.pipe {
+  width: 80px;
+  height: 80px;
+  cursor: pointer;
+  user-select: none;
+  transform-origin: center center;
+}
+svg { width: 100%; height: 100%; }
+.line { stroke: cyan; stroke-width: 8; stroke-linecap: round; }
+.red line { stroke: red; }
+.pipe.start { border-radius: 50%; }
+#success {
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 2em;
+  text-align: center;
+  display: none;
+  color: #00ff00;
+  background: rgba(0,0,0,0.7);
+  padding: 20px 40px;
+  border-radius: 10px;
+  z-index: 1000;
+}
+</style>
+</head>
+<body>
+<h1>ПАНЕЛЬ УПРАВЛЕНИЯ ЭЛЕКТРИЧЕСТВОМ – ВАРИАЦИЯ</h1>
+<div class="puzzle-container" id="puzzle"></div>
+<div id="success">УСПЕХ. УНИЧТОЖЕНИЕ СИСТЕМЫ ОТМЕНЕНО</div>
+
+<script>
+// Макет труб (почти не соединены, но решаемая)
+const layout = [
+  [{type:"end", dirs:["down"], initialRotation: 270},{type:"corner", dirs:["up","right"], initialRotation: 90},{type:"end", dirs:["right"], initialRotation: 180},{type:"end", dirs:["up"], initialRotation: 0}],
+  [{type:"corner", dirs:["down","left"], initialRotation: 180},{type:"triple", dirs:["up","left","right"], initialRotation: 90},{type:"triple", dirs:["down","left","right"], initialRotation: 180},{type:"corner", dirs:["up","right"], initialRotation: 0}],
+  [{type:"end", dirs:["left"], initialRotation: 90},{type:"triple", dirs:["up","down","right"], initialRotation: 270},{type:"start", dirs:["up","down","left","right"], initialRotation: 180},{type:"triple", dirs:["up","left","right"], initialRotation: 270}],
+  [{type:"corner", dirs:["down","right"], initialRotation: 90},{type:"corner", dirs:["up","left"], initialRotation: 270},{type:"corner", dirs:["up","down"], initialRotation: 0},{type:"end", dirs:["left"], initialRotation: 90}]
+];
+
+const rows = layout.length;
+const cols = layout[0].length;
+const container = document.getElementById('puzzle');
+const successDiv = document.getElementById('success');
+const pipes = [];
+
+for(let r=0;r<rows;r++){
+  for(let c=0;c<cols;c++){
+    const data = layout[r][c];
+    const div = document.createElement('div');
+    div.classList.add('pipe');
+    div.dataset.type = data.type;
+    div.dataset.dirs = data.dirs.join(",");
+    div.dataset.rotation = data.initialRotation;
+    if(data.type==="start") div.classList.add('start');
+    div.style.transform = `rotate(${data.initialRotation}deg)`;
+
+    const svgNS = "http://www.w3.org/2000/svg";
+    const svg = document.createElementNS(svgNS,"svg");
+
+    data.dirs.forEach(dir=>{
+      const line = document.createElementNS(svgNS,"line");
+      line.classList.add('line');
+      switch(dir){
+        case "up": line.setAttribute("x1","40"); line.setAttribute("y1","0"); line.setAttribute("x2","40"); line.setAttribute("y2","40"); break;
+        case "down": line.setAttribute("x1","40"); line.setAttribute("y1","40"); line.setAttribute("x2","40"); line.setAttribute("y2","80"); break;
+        case "left": line.setAttribute("x1","0"); line.setAttribute("y1","40"); line.setAttribute("x2","40"); line.setAttribute("y2","40"); break;
+        case "right": line.setAttribute("x1","40"); line.setAttribute("y1","40"); line.setAttribute("x2","80"); line.setAttribute("y2","40"); break;
+      }
+      svg.appendChild(line);
+    });
+
+    div.appendChild(svg);
+    container.appendChild(div);
+    pipes.push(div);
+  }
+}
+
+pipes.forEach(pipe=>{
+  pipe.addEventListener('click',()=>{
+    let rot = parseInt(pipe.dataset.rotation);
+    rot = (rot+90)%360;
+    pipe.dataset.rotation = rot;
+    pipe.style.transform = `rotate(${rot}deg)`;
+    updateFlow();
+  });
+});
+
+function getDirs(pipe){
+  const dirs = pipe.dataset.dirs.split(",");
+  const rot = parseInt(pipe.dataset.rotation);
+  const order = ["up","right","down","left"];
+  return dirs.map(d=>{
+    let idx = order.indexOf(d);
+    idx = (idx + rot/90)%4;
+    return order[idx];
+  });
+}
+
+function updateFlow(){
+  pipes.forEach(p=>p.classList.remove('red'));
+  successDiv.style.display = "none";
+  document.body.style.backgroundColor = "#0a0a0a";
+  const visited = new Set();
+  const start = pipes.findIndex(p=>p.classList.contains('start'));
+  if(start===-1) return;
+
+  function dfs(index){
+    if(visited.has(index)) return;
+    visited.add(index);
+    const pipe = pipes[index];
+    pipe.classList.add('red');
+    const dirs = getDirs(pipe);
+    const row = Math.floor(index/cols);
+    const col = index%cols;
+    const neighbors = {
+      up: row>0 ? index-cols : null,
+      down: row<rows-1 ? index+cols : null,
+      left: col>0 ? index-1 : null,
+      right: col<cols-1 ? index+1 : null
+    };
+    const opposite = {up:"down", down:"up", left:"right", right:"left"};
+
+    dirs.forEach(d=>{
+      const ni = neighbors[d];
+      if(ni!==null && !visited.has(ni)){
+        const ndirs = getDirs(pipes[ni]);
+        if(ndirs.includes(opposite[d])) dfs(ni);
+      }
+    });
+  }
+
+  dfs(start);
+
+  if(pipes.every(p=>p.classList.contains('red'))){
+    successDiv.style.display = "block";
+    blinkScreenGreen(6);
+  }
+}
+
+// Мигаем зелёным
+function blinkScreenGreen(times){
+  let count = 0;
+  const interval = setInterval(()=>{
+    document.body.style.backgroundColor = (count%2===0) ? "#00ff00" : "#0a0a0a";
+    count++;
+    if(count>times){
+      clearInterval(interval);
+      document.body.style.backgroundColor = "#0a0a0a";
+    }
+  }, 300);
+}
+
+updateFlow();
+</script>
+</body>
+</html>

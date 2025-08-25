@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIVINOS CONTROL PANEL</title>
+<style>
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: 'Courier New', monospace;
+    background: radial-gradient(circle at top, #0f0f1f, #000);
+    color: #0ff;
+    display: flex;
+    flex-direction: column;
+}
+h1 { 
+    font-size:2.5rem; 
+    text-align:center; 
+    margin:20px 0; 
+    text-shadow:0 0 10px #0ff, 0 0 20px #0ff; 
+}
+#page1Container { 
+    flex:1; display:flex; justify-content:center; align-items:center; 
+}
+#passwordBox { 
+    border:2px solid #0ff; 
+    padding:40px; 
+    border-radius:15px; 
+    text-align:center; 
+    background:rgba(0,0,0,0.7);
+    box-shadow: 0 0 20px #0ff inset, 0 0 40px #0ff; 
+}
+input[type="text"] { 
+    padding:12px 15px; 
+    font-size:1.5rem; 
+    border:2px solid #0ff; 
+    background:rgba(0,0,0,0.5); 
+    color:#0ff; 
+    outline:none; 
+    text-align:center; 
+    width:300px; 
+    letter-spacing:3px; 
+    text-transform:uppercase; 
+    border-radius:5px; 
+}
+button { 
+    margin-top:15px; 
+    padding:10px 25px; 
+    font-size:1.2rem; 
+    color:#000; 
+    background:#0ff; 
+    border:none; 
+    cursor:pointer; 
+    border-radius:5px; 
+}
+button:hover { 
+    box-shadow:0 0 20px #0ff,0 0 40px #0ff; 
+}
+.message { 
+    margin-top:10px; 
+    font-size:1.3rem; 
+    line-height:1.6; 
+    text-align:left; 
+    white-space: pre-line;
+}
+.hidden { display:none; }
+.clickable { 
+    cursor:pointer; 
+    margin:5px 0; 
+    transition: text-shadow 0.3s; 
+}
+.clickable:hover { 
+    text-decoration:underline; 
+    text-shadow:0 0 5px #0ff,0 0 10px #0ff; 
+}
+.terminal { 
+    display:flex; 
+    flex-direction:column; 
+    align-items:flex-start; 
+    width:80%; 
+    max-width:700px; 
+    margin:20px auto; 
+    border:2px solid #0ff; 
+    padding:20px; 
+    border-radius:10px; 
+    background:rgba(0,0,0,0.6); 
+    box-shadow: 0 0 15px #0ff inset, 0 0 30px #0ff; 
+}
+.fullscreen-text { 
+    position:fixed; top:0; left:0; width:100%; height:100%; 
+    background:black; color:#f00; 
+    display:flex; justify-content:center; align-items:center; 
+    font-size:2rem; text-align:center; padding:20px; box-sizing:border-box; 
+    z-index:1000;
+}
+.cursor { 
+    display:inline-block; 
+    width:10px; 
+    background:#0ff; 
+    margin-left:2px; 
+    animation: blink 1s step-start infinite; 
+}
+@keyframes blink { 50% { background:transparent; } }
+</style>
+</head>
+<body>
+<h1 id="mainTitle">VIVINOS CONTROL PANEL</h1>
+
+<!-- Страница 1 -->
+<div id="page1Container">
+    <div id="passwordBox">
+        <input type="text" id="password" placeholder="Введите пароль">
+        <br>
+        <button id="enterBtn">Enter</button>
+        <div class="message" id="message1"></div>
+    </div>
+</div>
+
+<!-- Контейнер для страниц 2-5 -->
+<div id="pagesContainer" style="display:none;">
+    <div id="page2" class="terminal" style="display:none;">
+        <div class="message" id="page2Text"></div>
+        <div id="page2Options"></div>
+    </div>
+    <div id="page3" class="terminal" style="display:none;">
+        <div class="message" id="page3Text"></div>
+        <button onclick="goToPage(2)">Назад</button>
+    </div>
+    <div id="page4" class="terminal" style="display:none;">
+        <div class="message" id="page4Text">
+            10 участников.<br>
+            Имеются признаки накрутки голосов за участника NOA.<br>
+            Система VIVINOS фиксирует стабильно мощный набор эмоциональной энергии.<br>
+            Система VIVINOS установила связь с системой VIVINOS-0 из параллельной реальности.<br>
+            Синхронизация проходит успешно.<br><br>
+            Запустить отмену синхронизации? Y/N
+        </div>
+        <button onclick="cancelSync('Y')">Y</button>
+        <button onclick="cancelSync('N')">N</button>
+        <div id="syncPasswordDiv" style="display:none;">
+            <input type="text" id="syncPassword" placeholder="Введите пароль">
+            <button onclick="checkSyncPassword()">Подтвердить</button>
+        </div>
+    </div>
+    <div id="page5" class="terminal" style="display:none;">
+        <div class="message">Вы желаете подключить нового Оверлорда? Задайте имя участника.</div>
+        <input type="text" id="newName" placeholder="Имя участника">
+        <button onclick="addOverlord()">Добавить</button>
+        <div class="message" id="overlordMessage"></div>
+        <button onclick="goToPage(2)">Назад</button>
+    </div>
+</div>
+
+<script>
+const correctPassword = 'ВТОРАЯ ЗВЕЗДА';
+const passwordInput = document.getElementById('password');
+const message1 = document.getElementById('message1');
+
+function checkPassword(){
+    if(passwordInput.value.toUpperCase() === correctPassword){
+        document.getElementById('page1Container').style.display='none';
+        for(let i=2;i<=5;i++){document.getElementById('page'+i).style.display='none';}
+        document.getElementById('pagesContainer').style.display='block';
+        goToPage(2);
+        typeText("Система VIVINOS приветствует главу Совета.\nЧем я могу быть полезна?", "page2Text", 15, createOptions);
+    } else {
+        message1.style.color = '#f00';
+        message1.textContent = 'Access denied';
+    }
+    passwordInput.value='';
+}
+
+document.getElementById('enterBtn').addEventListener('click', checkPassword);
+passwordInput.addEventListener('keydown', (e)=>{if(e.key==='Enter') checkPassword();});
+
+function goToPage(page){
+    for(let i=2;i<=5;i++){document.getElementById('page'+i).style.display='none';}
+    document.getElementById('page'+page).style.display='flex';
+
+    if(page===3){
+        typeText(`Первая попытка проникновения замечена системой VIVINOS во время финала 9 ALIEN STAGE.\n\nСистема зафиксировала работу цифрового интеллекта с признаками человеческого сознания.\nАтака была отбита.\n\nВторая попытка была зафиксирована во время взрыва электростанции.\nСистема VIVINOS включила защитный механизм, экстренный набор эмоциональной энергии.\nАтака была отбита.\n\nТретья попытка была зафиксирована в ANAKT GARDEN во время подготовки к ALIEN STAGE 15.\nОбнаружен цифровой интеллект с признаками человеческого сознания, называющий себя АЛИСА/БЕЛЫЙ КРОЛИК.\nИнтеллект был уничтожен.\n\nВ системе зафиксированы ошибки, запущена общая проверка.`, "page3Text", 15);
+    }
+}
+
+function createOptions(){
+    const options=[
+        {text:"Отчет о попытках проникновения в систему", page:3},
+        {text:"15 ALIEN STAGE", page:4},
+        {text:"Подключение новых участников системы", page:5}
+    ];
+    const container = document.getElementById("page2Options");
+    container.innerHTML='';
+    options.forEach(opt=>{
+        const div=document.createElement('div');
+        div.classList.add('clickable');
+        div.textContent='-> '+opt.text;
+        div.onclick=()=>goToPage(opt.page);
+        container.appendChild(div);
+    });
+}
+
+function cancelSync(choice){
+    const syncDiv=document.getElementById('syncPasswordDiv');
+    const syncMessage=document.getElementById('page4Text');
+    if(choice==='Y'){
+        syncMessage.innerHTML="ДАННАЯ КОМАНДА УНИЧТОЖИТ СЛЕДЫ ПРИБЫВАНИЯ VIVINOS И ВСЕХ ПОДКЛЮЧЕННЫХ К НЕЙ В ЭТОЙ РЕАЛЬНОСТИ.<br>ВВЕДИТЕ ПАРОЛЬ";
+        syncDiv.style.display='block';
+    } else {
+        syncMessage.textContent="Синхронизация продолжается.";
+        syncDiv.style.display='none';
+    }
+}
+
+function checkSyncPassword(){
+    const syncPass=document.getElementById('syncPassword').value.toUpperCase();
+    if(syncPass==="ИМЕНЕМ ЯНТАРЯ"){
+        document.body.innerHTML=`<div id="selfDestruct" class="fullscreen-text"><span id="selfText"></span><span class="cursor"></span></div>`;
+        const fullText = `Мы - Оверлорд Янтарь. Мы создали систему VIVINOS, но мы же и закладываем в неё возможность самоуничтожения. Мы боимся, что создали чудовище. Прости меня, мой народ. Я выбрал неверный путь. Пускай все, созданное мной для вас, будет разрушено...`;
+        typeText(fullText, "selfText", 25, ()=> {
+            // оставляем текст на экране на 2 секунды перед финальным сообщением
+            setTimeout(()=> {
+                document.getElementById('selfDestruct').innerHTML = "САМОУНИЧТОЖЕНИЕ СИСТЕМЫ ЗАПУЩЕНО<br>ВОЗВРАЩЕНИЕ В ИЗНАЧАЛЬНУЮ РЕАЛЬНОСТЬ";
+            }, 2000);
+        });
+    } else { 
+        alert("Неверный пароль. Команда отменена."); 
+    }
+}
+
+function addOverlord(){
+    const name=document.getElementById('newName').value.toUpperCase();
+    if(name){
+        document.getElementById('overlordMessage').textContent=`ОВЕРЛОРД ${name} ДОБАВЛЕН. ДОБРО ПОЖАЛОВАТЬ!`;
+        document.getElementById('newName').value='';
+    }
+}
+
+function typeText(text, elementId, speed=15, callback=null){
+    const el=document.getElementById(elementId);
+    el.innerHTML='<span class="cursor"></span>';
+    let i=0;
+    function typing(){
+        if(i<text.length){
+            const char=text[i];
+            const cursor = el.querySelector('.cursor');
+            if(char==='\\n'){ cursor.insertAdjacentHTML('beforebegin','<br>'); } 
+            else { cursor.insertAdjacentHTML('beforebegin', char); }
+            i++;
+            setTimeout(typing,speed);
+        } else if(callback){ callback(); }
+    }
+    typing();
+}
+</script>
+</body>
+</html>
